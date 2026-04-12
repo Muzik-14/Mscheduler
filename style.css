@@ -1,0 +1,62 @@
+body {
+  font-family: Arial;
+  background: #f4f6f8;
+}
+
+.container {
+  display: flex;
+  gap: 20px;
+}
+
+.grid-container {
+  overflow: auto;
+  max-height: 600px;
+}
+
+table {
+  border-collapse: collapse;
+  background: white;
+}
+
+td, th {
+  border: 1px solid #ccc;
+  padding: 4px;
+  text-align: center;
+  width: 70px;
+  font-size: 12px;
+}
+
+th {
+  background: #333;
+  color: white;
+}
+
+.controls {
+  width: 420px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.agent {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+  position: relative;
+}
+
+.remove-btn {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  background: red;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.copy-btn, .paste-btn {
+  margin: 2px;
+  font-size: 10px;
+}
