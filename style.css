@@ -60,3 +60,14 @@ th {
   margin: 2px;
   font-size: 10px;
 }
+
+
+.sizer-table {
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.sizer-table td, .sizer-table th {
+  border: 1px solid black;
+  padding: 6px 10px;
+}
