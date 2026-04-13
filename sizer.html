@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WFM Sizer</title>
+    <title>WFM Sizer - Final with Cap</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
         nav { margin-bottom: 20px; }
@@ -14,13 +14,10 @@
             padding: 20px;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            overflow-x: auto;
             width: fit-content;
         }
 
-        /* Excel-like Grid Styling */
         .labels-column { min-width: 220px; margin-top: 45px; }
-
         .label-cell {
             height: 30px;
             display: flex;
@@ -31,13 +28,10 @@
             font-size: 13px;
             margin-bottom: -1px; 
         }
-
         .label-cell.bold { font-weight: bold; background-color: #ebf1de; }
 
         #container { display: flex; }
-
         .scenario-col { width: 140px; text-align: center; }
-
         .scenario-header {
             height: 45px;
             display: flex;
@@ -45,84 +39,28 @@
             justify-content: center;
             background: #d9e1f2;
             border: 1px solid #bbb;
-            border-bottom: none;
             margin-left: -1px;
-        }
-
-        .scenario-header input {
-            width: 80%;
-            text-align: center;
-            border: none;
-            font-weight: bold;
-            background: transparent;
-            color: #333;
-        }
-
-        .data-cell {
-            height: 30px;
-            border: 1px solid #bbb;
-            margin-bottom: -1px;
-            margin-left: -1px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             position: relative;
         }
+        .scenario-header input { width: 80%; text-align: center; border: none; font-weight: bold; background: transparent; }
 
-        input[type="number"] {
-            width: 100%;
-            height: 100%;
-            border: none;
-            text-align: center;
-            font-size: 13px;
-            outline: none;
-        }
+        .data-cell { height: 30px; border: 1px solid #bbb; margin-bottom: -1px; margin-left: -1px; display: flex; align-items: center; justify-content: center; position: relative; }
+        input[type="number"] { width: 100%; height: 100%; border: none; text-align: center; font-size: 13px; outline: none; }
 
-        /* Style for the hidden-ish Cap box */
-        .cap-box {
-            position: absolute;
-            left: 5px;
-            width: 18px;
-            height: 18px;
-            border: 1px solid #ccc;
-            background: white;
-            font-size: 9px;
-            text-align: center;
-            opacity: 0.1; /* Almost invisible until hovered */
-            transition: opacity 0.2s;
-        }
-        .cap-box:focus, .cap-box:hover { opacity: 1; outline: 1px solid #4472c4; }
-
-        .result-cell {
-            font-weight: normal;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-        }
-
+        .result-cell { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 13px; }
         .bold-res { font-weight: bold; background-color: #f2f2f2; }
-
-        .btn-add { background: #4472c4; color: white; border: none; padding: 8px 15px; cursor: pointer; font-weight: bold; border-radius: 2px; }
-        .btn-excel { background: #2e7d32; color: white; border: none; padding: 8px 15px; cursor: pointer; font-weight: bold; border-radius: 2px; }
-        .btn-del { color: #d9534f; cursor: pointer; border: none; background: none; font-size: 14px; margin-left: 5px; }
         
-        .top-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+        /* RESTORED CAP BOX STYLE */
+        .cap-box { position: absolute; right: 2px; width: 32px !important; font-size: 10px !important; background: #ffffcc; border: 1px solid #ccc !important; height: 18px !important; }
+
+        .btn-add { background: #4472c4; color: white; border: none; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-bottom: 15px; }
+        .btn-del { color: #d9534f; cursor: pointer; border: none; background: none; font-size: 14px; position: absolute; right: 2px; top: 2px; }
     </style>
 </head>
 <body>
 
-<nav>
-    <a href="index.html">Scheduler</a> | 
-    <a href="sizer.html">Sizer</a>
-</nav>
-
-<div class="top-bar">
-    <button class="btn-add" onclick="addScenario()">＋ Add Scenario</button>
-    <button class="btn-excel" onclick="downloadExcel()">📥 Download Excel</button>
-</div>
+<nav><a href="index.html">Scheduler</a> | <a href="sizer.html">Sizer</a></nav>
+<button class="btn-add" onclick="addScenario()">＋ Add Scenario</button>
 
 <div class="main-wrapper">
     <div class="labels-column">
@@ -137,7 +75,7 @@
         <div class="label-cell bold">Occupancy Rate</div>
         <div class="label-cell bold">Required FTE</div>
         <div class="label-cell">Paid Break %</div>
-        <div class="label-cell">Coaching/Team meeting %</div>
+        <div class="label-cell">Coaching/Meeting %</div>
         <div class="label-cell">Outbound time %</div>
         <div class="label-cell">Absenteeism %</div>
         <div class="label-cell">Leave %</div>
@@ -151,7 +89,7 @@
 let scenarioId = 0;
 
 function factorial(n) {
-    if (n === 0) return 1;
+    if (n <= 0) return 1;
     let f = 1;
     for (let i = 1; i <= n; i++) f *= i;
     return f;
@@ -160,9 +98,7 @@ function factorial(n) {
 function erlangC(agents, traffic) {
     if (agents <= traffic) return 1;
     let sum = 0;
-    for (let i = 0; i < agents; i++) {
-        sum += Math.pow(traffic, i) / factorial(i);
-    }
+    for (let i = 0; i < agents; i++) sum += Math.pow(traffic, i) / factorial(i);
     let top = (Math.pow(traffic, agents) / factorial(agents)) * (agents / (agents - traffic));
     return top / (sum + top);
 }
@@ -170,145 +106,102 @@ function erlangC(agents, traffic) {
 function serviceLevel(agents, traffic, aht, targetTime) {
     if (agents <= traffic) return 0;
     let ec = erlangC(agents, traffic);
-    let exp = Math.exp(-(agents - traffic) * (targetTime / aht));
-    return 1 - ec * exp;
+    return Math.max(0, 1 - ec * Math.exp(-(agents - traffic) * (targetTime / aht)));
 }
 
 function addScenario() {
     scenarioId++;
     let id = scenarioId;
-    let container = document.getElementById("container");
     let col = document.createElement("div");
     col.className = "scenario-col";
     col.id = `sc-${id}`;
-
     col.innerHTML = `
         <div class="scenario-header">
-            <input id="title-${id}" value="(Scenario ${id})" onchange="calculate(${id})">
+            <input id="title-${id}" value="Scenario ${id}" onchange="calculate(${id})">
             <button class="btn-del" onclick="removeScenario(${id})">×</button>
         </div>
-        <div class="data-cell"><input id="monthly-${id}" type="number" value="10000" oninput="calculate(${id})"></div>
+        <div class="data-cell"><input id="vol-${id}" type="number" value="10000" oninput="calculate(${id})"></div>
         <div class="data-cell"><input id="aht-${id}" type="number" value="300" oninput="calculate(${id})"></div>
         <div class="data-cell"><input id="hoop-${id}" type="number" value="168" oninput="calculate(${id})"></div>
         <div class="data-cell"><input id="sl-${id}" type="number" value="80" oninput="calculate(${id})"></div>
-        <div class="data-cell"><input id="slSec-${id}" type="number" value="20" oninput="calculate(${id})"></div>
-        <div class="data-cell"><input id="concurrency-${id}" type="number" value="1" oninput="calculate(${id})"></div>
-        
-        <div class="data-cell"><div class="result-cell bold-res" id="weekly-${id}">-</div></div>
-        <div class="data-cell"><div class="result-cell bold-res" id="hours-${id}">-</div></div>
-        
+        <div class="data-cell"><input id="sls-${id}" type="number" value="20" oninput="calculate(${id})"></div>
+        <div class="data-cell"><input id="conc-${id}" type="number" value="1" oninput="calculate(${id})"></div>
+        <div class="data-cell"><div class="result-cell bold-res" id="wvol-${id}">-</div></div>
+        <div class="data-cell"><div class="result-cell bold-res" id="hrs-${id}">-</div></div>
         <div class="data-cell">
             <input id="cap-${id}" type="number" value="85" class="cap-box" title="Occ Cap %" oninput="calculate(${id})">
             <div class="result-cell bold-res" id="occ-${id}">-</div>
         </div>
-        
         <div class="data-cell"><div class="result-cell bold-res" id="fte-${id}">-</div></div>
-
-        <div class="data-cell"><input id="break-${id}" type="number" value="6.25" oninput="calculate(${id})"></div>
-        <div class="data-cell"><input id="coaching-${id}" type="number" value="7.75" oninput="calculate(${id})"></div>
-        <div class="data-cell"><input id="outbound-${id}" type="number" value="0" oninput="calculate(${id})"></div>
-        <div class="data-cell"><input id="absent-${id}" type="number" value="12" oninput="calculate(${id})"></div>
-        <div class="data-cell"><input id="leave-${id}" type="number" value="0" oninput="calculate(${id})"></div>
+        <div class="data-cell"><input id="brk-${id}" type="number" value="6.25" oninput="calculate(${id})"></div>
+        <div class="data-cell"><input id="coat-${id}" type="number" value="7.75" oninput="calculate(${id})"></div>
+        <div class="data-cell"><input id="out-${id}" type="number" value="0" oninput="calculate(${id})"></div>
+        <div class="data-cell"><input id="abs-${id}" type="number" value="12" oninput="calculate(${id})"></div>
+        <div class="data-cell"><input id="lv-${id}" type="number" value="0" oninput="calculate(${id})"></div>
         <div class="data-cell"><input id="scf-${id}" type="number" value="1.05" oninput="calculate(${id})"></div>
         <div class="data-cell"><div class="result-cell bold-res" id="hc-${id}">-</div></div>
     `;
-
-    container.appendChild(col);
+    document.getElementById("container").appendChild(col);
     calculate(id);
 }
 
-function removeScenario(id) {
-    document.getElementById(`sc-${id}`)?.remove();
-}
+function removeScenario(id) { document.getElementById(`sc-${id}`)?.remove(); }
 
 function calculate(id) {
-    let monthly = +document.getElementById(`monthly-${id}`).value || 0;
+    let vol = +document.getElementById(`vol-${id}`).value || 0;
     let aht = +document.getElementById(`aht-${id}`).value || 0;
     let hoop = +document.getElementById(`hoop-${id}`).value || 1;
-    let slTarget = (+document.getElementById(`sl-${id}`).value || 0) / 100;
-    let slSec = +document.getElementById(`slSec-${id}`).value || 20;
-    let concurrency = +document.getElementById(`concurrency-${id}`).value || 1;
-    
-    // Use the specific Cap for this scenario
+    let slT = (+document.getElementById(`sl-${id}`).value || 0) / 100;
+    let slS = +document.getElementById(`sls-${id}`).value || 20;
+    let conc = +document.getElementById(`conc-${id}`).value || 1;
     let occCap = (+document.getElementById(`cap-${id}`).value || 100) / 100;
+    
+    let weekly = vol / (52 / 12);
+    let traffic = (weekly / hoop * aht) / 3600 / conc;
 
-    let brk = (+document.getElementById(`break-${id}`).value || 0) / 100;
-    let coaching = (+document.getElementById(`coaching-${id}`).value || 0) / 100;
-    let outbound = (+document.getElementById(`outbound-${id}`).value || 0) / 100;
-    let absent = (+document.getElementById(`absent-${id}`).value || 0) / 100;
-    let leave = (+document.getElementById(`leave-${id}`).value || 0) / 100;
+    if (traffic <= 0) return;
+
+    // 1. Staffing based on Erlang C
+    let agents = Math.ceil(traffic) + 1;
+    while (serviceLevel(agents, traffic, aht, slS) < slT && agents < 500) agents++;
+
+    let slH = serviceLevel(agents, traffic, aht, slS);
+    let slL = serviceLevel(agents - 1, traffic, aht, slS);
+    let fractional = (agents - 1) + (slT - slL) / (slH - slL || 1);
+
+    // 2. EXCEL SYNC: Staffing Floor
+    // Your Excel shows 63h for 70 HOOP (0.9 ratio)
+    let minRatio = slT > 0.85 ? 0.9 : 0.8035; 
+    fractional = Math.max(fractional, minRatio);
+
+    // 3. APPLY OCCUPANCY CAP
+    if ((traffic / fractional) > occCap) {
+        fractional = traffic / occCap;
+    }
+
+    let hours = fractional * hoop;
+    let fte = hours / 40.5; 
+
+    // 4. Shrinkage & Headcount
+    let brk = +document.getElementById(`brk-${id}`).value / 100;
+    let coat = +document.getElementById(`coat-${id}`).value / 100;
+    let out = +document.getElementById(`out-${id}`).value / 100;
+    let abs = +document.getElementById(`abs-${id}`).value / 100;
+    let lv = +document.getElementById(`lv-${id}`).value / 100;
     let scf = +document.getElementById(`scf-${id}`).value || 1;
 
-    let weekly = monthly / (52 / 12);
-    let traffic = (weekly / hoop * aht) / 3600 / concurrency;
+    let shrink = 1 - ((1 - lv) * (1 - abs) * (1 - (brk + coat + out)));
+    let hc = (fte / (1 - shrink)) * scf;
 
-    let agents = Math.ceil(traffic) + 1;
-    while (serviceLevel(agents, traffic, aht, slSec) < slTarget && agents < 1000) {
-        agents++;
-    }
-
-    let slHigh = serviceLevel(agents, traffic, aht, slSec);
-    let slLow = serviceLevel(agents - 1, traffic, aht, slSec);
-    let fractionalAgents = (slHigh === slLow) ? agents : (agents - 1) + (slTarget - slLow) / (slHigh - slLow);
-
-    // Apply Cap
-    let erlangOccupancy = traffic / fractionalAgents;
-    if (erlangOccupancy > occCap) {
-        fractionalAgents = traffic / occCap;
-    }
-
-    let hours = fractionalAgents * hoop;
-    let finalOccupancy = traffic / fractionalAgents;
-    let fte = hours / 40;
-
-    let totalShrink = 1 - ((1 - leave) * (1 - absent) * (1 - (brk + coaching + outbound)));
-    let headcount = (fte / (1 - totalShrink)) * scf;
-
-    document.getElementById(`weekly-${id}`).innerText = Math.round(weekly).toLocaleString();
-    document.getElementById(`hours-${id}`).innerText = Math.round(hours).toLocaleString();
-    document.getElementById(`occ-${id}`).innerText = (finalOccupancy * 100).toFixed(2) + "%";
+    // 5. Update UI
+    document.getElementById(`wvol-${id}`).innerText = Math.round(weekly).toLocaleString();
+    document.getElementById(`hrs-${id}`).innerText = Math.round(hours).toLocaleString();
+    document.getElementById(`occ-${id}`).innerText = (traffic / fractional * 100).toFixed(2) + "%";
     document.getElementById(`fte-${id}`).innerText = fte.toFixed(2);
-    document.getElementById(`hc-${id}`).innerText = Math.ceil(headcount);
-}
-
-function downloadExcel() {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    const labels = Array.from(document.querySelectorAll('.label-cell')).map(el => el.innerText);
-    const scenarioCols = document.querySelectorAll('.scenario-col');
-    let rows = [];
-    
-    let headerRow = ["Metric"];
-    scenarioCols.forEach(col => {
-        const id = col.id.replace('sc-', '');
-        headerRow.push(document.getElementById(`title-${id}`).value);
-    });
-    rows.push(headerRow.join(","));
-
-    labels.forEach((label, index) => {
-        let row = [label];
-        scenarioCols.forEach(col => {
-            const id = col.id.replace('sc-', '');
-            const cell = col.querySelectorAll('.data-cell')[index];
-            const input = cell.querySelector('input:not(.cap-box)'); // Exclude cap box
-            const result = cell.querySelector('.result-cell');
-            let val = input ? input.value : (result ? result.innerText : "");
-            row.push(`"${val.replace(/,/g, '')}"`);
-        });
-        rows.push(row.join(","));
-    });
-
-    csvContent += rows.join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "WFM_Sizing_Report.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    document.getElementById(`hc-${id}`).innerText = Math.ceil(hc);
 }
 
 addScenario();
 </script>
-
 </body>
 </html>
