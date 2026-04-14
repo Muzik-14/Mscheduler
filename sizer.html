@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WFM Sizer - Final with Cap</title>
+    <title>WFM Sizer - Final with Export</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
         nav { margin-bottom: 20px; }
@@ -50,10 +51,10 @@
         .result-cell { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 13px; }
         .bold-res { font-weight: bold; background-color: #f2f2f2; }
         
-        /* RESTORED CAP BOX STYLE */
         .cap-box { position: absolute; right: 2px; width: 32px !important; font-size: 10px !important; background: #ffffcc; border: 1px solid #ccc !important; height: 18px !important; }
 
-        .btn-add { background: #4472c4; color: white; border: none; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-bottom: 15px; }
+        .btn-add { background: #4472c4; color: white; border: none; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-bottom: 15px; border-radius: 4px; }
+        .btn-export { background: #217346; color: white; border: none; padding: 8px 15px; cursor: pointer; font-weight: bold; margin-bottom: 15px; margin-left: 10px; border-radius: 4px; }
         .btn-del { color: #d9534f; cursor: pointer; border: none; background: none; font-size: 14px; position: absolute; right: 2px; top: 2px; }
     </style>
 </head>
@@ -61,8 +62,9 @@
 
 <nav><a href="index.html">Scheduler</a> | <a href="sizer.html">Sizer</a></nav>
 <button class="btn-add" onclick="addScenario()">＋ Add Scenario</button>
+<button class="btn-export" onclick="exportToExcel()">📊 Export to Excel</button>
 
-<div class="main-wrapper">
+<div class="main-wrapper" id="sizer-table">
     <div class="labels-column">
         <div class="label-cell">Monthly Volume</div>
         <div class="label-cell">AHT (seconds)</div>
@@ -161,7 +163,6 @@ function calculate(id) {
 
     if (traffic <= 0) return;
 
-    // 1. Staffing based on Erlang C
     let agents = Math.ceil(traffic) + 1;
     while (serviceLevel(agents, traffic, aht, slS) < slT && agents < 500) agents++;
 
@@ -169,12 +170,10 @@ function calculate(id) {
     let slL = serviceLevel(agents - 1, traffic, aht, slS);
     let fractional = (agents - 1) + (slT - slL) / (slH - slL || 1);
 
-    // 2. EXCEL SYNC: Staffing Floor
-    // Your Excel shows 63h for 70 HOOP (0.9 ratio)
+    // Sync with your Excel staff floor logic
     let minRatio = slT > 0.85 ? 0.9 : 0.8035; 
     fractional = Math.max(fractional, minRatio);
 
-    // 3. APPLY OCCUPANCY CAP
     if ((traffic / fractional) > occCap) {
         fractional = traffic / occCap;
     }
@@ -182,7 +181,6 @@ function calculate(id) {
     let hours = fractional * hoop;
     let fte = hours / 40.5; 
 
-    // 4. Shrinkage & Headcount
     let brk = +document.getElementById(`brk-${id}`).value / 100;
     let coat = +document.getElementById(`coat-${id}`).value / 100;
     let out = +document.getElementById(`out-${id}`).value / 100;
@@ -193,12 +191,46 @@ function calculate(id) {
     let shrink = 1 - ((1 - lv) * (1 - abs) * (1 - (brk + coat + out)));
     let hc = (fte / (1 - shrink)) * scf;
 
-    // 5. Update UI
     document.getElementById(`wvol-${id}`).innerText = Math.round(weekly).toLocaleString();
     document.getElementById(`hrs-${id}`).innerText = Math.round(hours).toLocaleString();
     document.getElementById(`occ-${id}`).innerText = (traffic / fractional * 100).toFixed(2) + "%";
     document.getElementById(`fte-${id}`).innerText = fte.toFixed(2);
     document.getElementById(`hc-${id}`).innerText = Math.ceil(hc);
+}
+
+function exportToExcel() {
+    let table = document.getElementById("sizer-table");
+    let wb = XLSX.utils.book_new();
+    
+    // Convert current visible UI values to data array
+    let data = [];
+    let rows = table.querySelectorAll(".label-cell");
+    let scenarios = document.querySelectorAll(".scenario-col");
+
+    // Header row
+    let headerRow = ["Metric"];
+    scenarios.forEach(s => {
+        let titleInput = s.querySelector(".scenario-header input");
+        headerRow.push(titleInput.value);
+    });
+    data.push(headerRow);
+
+    // Data rows
+    rows.forEach((row, rowIndex) => {
+        let rowData = [row.innerText];
+        scenarios.forEach(s => {
+            let cells = s.querySelectorAll(".data-cell");
+            let targetCell = cells[rowIndex];
+            let input = targetCell.querySelector("input");
+            let result = targetCell.querySelector(".result-cell");
+            rowData.push(input ? input.value : (result ? result.innerText : ""));
+        });
+        data.push(rowData);
+    });
+
+    let ws = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, "Sizer Results");
+    XLSX.writeFile(wb, "WFM_Sizer_Export.xlsx");
 }
 
 addScenario();
